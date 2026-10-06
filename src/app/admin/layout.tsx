@@ -62,8 +62,8 @@ export default function AdminLayout({
         {/* Brand Admin */}
         <div className="h-20 flex items-center px-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center font-bold shadow-lg shadow-emerald-500/20">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src="/logo.png" alt="InvestTrack Logo" className="w-full h-full object-contain drop-shadow-md" />
             </div>
             <span className="text-xl font-extrabold tracking-tight">InvestTrack <span className="text-emerald-500 text-xs ml-1 px-1.5 py-0.5 bg-emerald-500/10 rounded">Admin</span></span>
           </div>

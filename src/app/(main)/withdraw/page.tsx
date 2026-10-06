@@ -39,11 +39,19 @@ export default function WithdrawPage() {
 
     const numAmount = Number(amount.replace(/\D/g, ''));
     const { error } = await supabase.from('transactions').insert([{
-      investor_id: userId,
+      user_id: userId,
       type: 'withdraw',
       amount: numAmount,
       status: 'pending'
     }]);
+
+    if (!error) {
+      await supabase.from('notifications').insert([{
+        user_id: userId,
+        title: '⏳ Permintaan Tarik Dana',
+        message: `Permintaan tarik dana Anda sebesar Rp ${numAmount.toLocaleString('id-ID')} sedang diproses oleh admin.`,
+      }]);
+    }
 
     setIsSubmitting(false);
 

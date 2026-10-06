@@ -111,13 +111,13 @@ export default function LoginPage() {
             
             {/* Logo Brand */}
             <div 
-              className={`flex items-center gap-2.5 mb-16 ${mounted ? 'anim-fade-up' : 'opacity-0'}`} 
+              className={`flex flex-col items-center gap-2.5 mb-12 ${mounted ? 'anim-fade-up' : 'opacity-0'}`} 
               style={{ animationDelay: '0.1s' }}
             >
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+              <div className="w-24 h-24 flex items-center justify-center">
+                <img src="/logo.png" alt="InvestTrack Logo" className="w-full h-full object-contain drop-shadow-xl" />
               </div>
-              <span className="text-2xl font-extrabold tracking-tight text-slate-900">InvestTrack</span>
+              <span className="text-2xl font-extrabold tracking-tight text-slate-900 hidden">InvestTrack</span>
             </div>
 
             <h1 

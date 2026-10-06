@@ -26,10 +26,10 @@ export default function GlobalSearch() {
   const menuItems = [
     { title: "Dasbor Utama", type: "Halaman", href: "/" },
     { title: "Katalog Peluang Investasi", type: "Halaman", href: "/opportunities" },
-    { title: "Aksi: Setor Dana", type: "Aksi WhatsApp", href: "https://wa.me/6281234567890?text=Halo%20Admin%20InvestTrack,%20saya%20ingin%20melakukan%20Setor%20Dana." },
+    { title: "Aksi: Setor Dana", type: "Aksi WhatsApp", href: "https://wa.me/628233557549?text=Halo%20Admin%20InvestTrack,%20saya%20ingin%20melakukan%20Setor%20Dana." },
     { title: "Aksi: Tarik Dana", type: "Aksi WhatsApp", href: "https://wa.me/6281234567890?text=Halo%20Admin%20InvestTrack,%20saya%20ingin%20melakukan%20Tarik%20Dana." },
-    { title: "Proyek: Pembangunan Villa Mewah Bali", type: "Proyek", href: "https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20tertarik%20investasi%20di%20Villa%20Mewah%20Bali" },
-    { title: "Proyek: Pembangkit Listrik Surya", type: "Proyek", href: "https://wa.me/6281234567890?text=Halo%20Admin,%20saya%20tertarik%20investasi%20di%20Pembangkit%20Listrik" }
+    { title: "Proyek: Pembangunan Villa Mewah Bali", type: "Proyek", href: "https://wa.me/628233557549?text=Halo%20Admin,%20saya%20tertarik%20investasi%20di%20Villa%20Mewah%20Bali" },
+    { title: "Proyek: Pembangkit Listrik Surya", type: "Proyek", href: "https://wa.me/628233557549?text=Halo%20Admin,%20saya%20tertarik%20investasi%20di%20Pembangkit%20Listrik" }
   ];
 
   const filtered = query === "" ? menuItems : menuItems.filter(item => 

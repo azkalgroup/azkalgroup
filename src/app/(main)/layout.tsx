@@ -49,10 +49,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* SIDEBAR */}
-      <aside className={`flex flex-col w-64 bg-slate-50 h-screen fixed left-0 top-0 overflow-y-auto border-r border-slate-200 z-[60] transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`flex flex-col w-64 bg-slate-50 h-screen fixed left-0 top-0 overflow-y-auto hide-scrollbar border-r border-slate-200 z-[60] transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Logo */}
-        <div className="p-8 pb-4">
-          <h1 className="text-2xl font-bold text-slate-800">InvestTrack</h1>
+        <div className="p-6 pb-2 flex flex-col items-center">
+          <img src="/logo.png" alt="InvestTrack Logo" className="w-20 h-20 object-contain mb-2" />
+          <h1 className="text-xl font-bold text-slate-800 hidden">InvestTrack</h1>
           <p className="text-sm font-medium text-slate-500 mt-0.5">Portal Investor</p>
         </div>
 

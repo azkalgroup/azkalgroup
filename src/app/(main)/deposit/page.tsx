@@ -36,11 +36,19 @@ export default function DepositPage() {
 
     const numAmount = Number(amount.replace(/\D/g, ''));
     const { error } = await supabase.from('transactions').insert([{
-      investor_id: userId,
+      user_id: userId,
       type: 'deposit',
       amount: numAmount,
       status: 'pending'
     }]);
+
+    if (!error) {
+      await supabase.from('notifications').insert([{
+        user_id: userId,
+        title: '⏳ Permintaan Setor Dana',
+        message: `Permintaan setor dana Anda sebesar Rp ${numAmount.toLocaleString('id-ID')} sedang diproses oleh admin.`,
+      }]);
+    }
 
     setIsSubmitting(false);
 
