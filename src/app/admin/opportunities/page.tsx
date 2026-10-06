@@ -13,7 +13,7 @@ export default function AdminOpportunitiesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Form States
-  const [addForm, setAddForm] = useState({ name: "", category: "Kesehatan", target: "", roi: "10% - 15% p.a" });
+  const [addForm, setAddForm] = useState({ name: "", category: "Kesehatan", target: "", roi: "10% - 15% p.a", status: "Aktif" });
   const [editForm, setEditForm] = useState({ name: "", status: "Aktif" });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -82,7 +82,7 @@ export default function AdminOpportunitiesPage() {
       target_amount: targetAmount,
       roi: addForm.roi,
       deadline: deadlineDate.toISOString(),
-      status: 'Draf',
+      status: addForm.status,
       image_url: imageUrl
     };
 
@@ -105,7 +105,7 @@ export default function AdminOpportunitiesPage() {
       }
 
       setIsAddModalOpen(false);
-      setAddForm({ name: "", category: "Kesehatan", target: "", roi: "10% - 15% p.a" });
+      setAddForm({ name: "", category: "Kesehatan", target: "", roi: "10% - 15% p.a", status: "Aktif" });
       setImageFile(null);
       fetchProjects();
     }
@@ -360,6 +360,17 @@ export default function AdminOpportunitiesPage() {
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-sm" 
                   placeholder="Contoh: 12% - 15% p.a" 
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Status Publikasi</label>
+                <select 
+                  value={addForm.status}
+                  onChange={(e) => setAddForm({...addForm, status: e.target.value})}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white transition-colors text-sm"
+                >
+                  <option value="Aktif">🟢 Aktif — langsung tampil ke investor</option>
+                  <option value="Draf">🔘 Draf — simpan dulu, belum tampil</option>
+                </select>
               </div>
             </div>
             <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">

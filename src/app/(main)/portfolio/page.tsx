@@ -14,7 +14,7 @@ export default function PortfolioPage() {
       if (userId) {
         const { data } = await supabase
           .from('investments')
-          .select('*, projects(*)')
+          .select('id,amount,created_at,projects(id,name,category,status,roi,image_url)')
           .eq('investor_id', userId);
           
         if (data) {

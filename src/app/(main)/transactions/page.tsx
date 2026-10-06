@@ -15,7 +15,7 @@ export default function TransactionsPage() {
       if (userId) {
         const { data } = await supabase
           .from('transactions')
-          .select('*')
+          .select('id,type,amount,status,created_at,notes')
           .eq('investor_id', userId)
           .order('created_at', { ascending: false });
         if (data) setTransactions(data);

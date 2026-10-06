@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { getUserId } from '@/lib/auth';
 import LogoutButton from '@/components/LogoutButton';
 import AdminSidebarNav from '@/components/AdminSidebarNav';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -25,12 +26,12 @@ export default function AdminLayout({
 
   useEffect(() => {
     async function checkRole() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const userId = await getUserId();
+      if (!userId) {
         router.push('/login');
         return;
       }
-      const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      const { data } = await supabase.from('profiles').select('role').eq('id', userId).single();
       if (data?.role !== 'admin') {
         router.push('/');
         return;

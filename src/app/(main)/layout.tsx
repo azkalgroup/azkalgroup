@@ -21,19 +21,22 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     async function loadAvatar() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from('profiles').select('avatar_url, full_name').eq('id', user.id).single();
-        if (data?.avatar_url) {
-          setAvatarUrl(data.avatar_url);
-        }
-        if (data?.full_name) {
-          setUserInitials(data.full_name.charAt(0).toUpperCase());
-        }
-      }
+      // getSession() baca dari cache lokal (tidak ada network request)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url, full_name')
+        .eq('id', session.user.id)
+        .single();
+
+      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      if (data?.full_name) setUserInitials(data.full_name.charAt(0).toUpperCase());
     }
     loadAvatar();
-  }, [pathname]);
+  }, []); // hanya sekali saat mount, bukan setiap pathname berubah
+
 
   return (
     <div className="flex w-full min-h-screen">

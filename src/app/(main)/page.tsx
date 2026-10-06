@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getUserId } from '@/lib/auth';
+import SkeletonCard from '@/components/SkeletonCard';
 
 export default function Home() {
   const [profile, setProfile] = useState<any>(null);
@@ -12,28 +14,27 @@ export default function Home() {
 
   useEffect(() => {
     async function loadData() {
-      // Jalankan semua query secara PARALEL (bersamaan) agar lebih cepat
-      const [userResult, projectsResult] = await Promise.all([
-        supabase.auth.getUser(),
-        supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(3)
+      // Ambil user session dulu (cepat, dari cache lokal)
+      // Use cached user ID for fast local lookup
+      const userId = await getUserId();
+      if (!userId) { setLoading(false); return; }
+
+      // Removed user check; using cached userId
+
+      // Jalankan profile + projects PARALEL sekaligus
+      const [profileResult, projectsResult] = await Promise.all([
+        supabase.from('profiles').select('id,full_name,balance,avatar_url').eq('id', userId).single(),
+        supabase.from('projects').select('id,name,title,category,target_amount,collected_amount,status,roi,image_url,created_at').order('created_at', { ascending: false }).limit(3),
       ]);
 
-      // Set profil
-      const user = userResult.data?.user;
-      if (user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        setProfile(data);
-      }
+      if (profileResult.data) setProfile(profileResult.data);
+      if (projectsResult.data) setProjects(projectsResult.data);
 
-      // Set proyek
-      if (projectsResult.data) {
-        setProjects(projectsResult.data);
-      }
-      
       setLoading(false);
     }
     loadData();
   }, []);
+
 
   return (
     <div className="flex-1 w-full p-6 md:p-8 pt-8 md:pt-8 min-h-screen pb-24 md:pb-12">
@@ -75,7 +76,7 @@ export default function Home() {
           <div>
             <p className="text-slate-500 text-[13px] font-medium mb-1">Saldo Tersedia</p>
             <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
-              {loading ? "..." : `Rp ${profile?.balance?.toLocaleString('id-ID') || '0'}`}
+              {loading ? <SkeletonCard height="h-8" /> : `Rp ${profile?.balance?.toLocaleString('id-ID') || '0'}`}
             </h3>
           </div>
           <div className="flex items-end gap-1.5 mt-4 h-10">
@@ -164,149 +165,63 @@ export default function Home() {
 
       </div>
 
-      {/* CHART SECTION */}
+      {/* PERTUMBUHAN PORTOFOLIO */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-8">
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex justify-between items-start mb-6">
           <div>
             <h3 className="text-lg font-bold text-slate-800">Pertumbuhan Portofolio</h3>
-            <p className="text-sm text-slate-500 mt-0.5">Perbandingan modal vs pengembalian seiring waktu</p>
-          </div>
-          <div className="flex bg-slate-50 p-1 rounded-lg">
-            <button className="px-4 py-1.5 bg-amber-400 text-white text-xs font-bold rounded-md shadow-sm">Mingguan</button>
-            <button className="px-4 py-1.5 text-slate-500 hover:text-slate-700 text-xs font-semibold rounded-md">Bulanan</button>
+            <p className="text-sm text-slate-500 mt-0.5">Riwayat saldo dan transaksi Anda</p>
           </div>
         </div>
-        
-        {/* Line Chart Mock */}
-        <div className="w-full h-64 relative mt-4">
-          {/* Grid lines vertical */}
-          <div className="absolute inset-0 flex justify-between pointer-events-none px-6">
-            <div className="border-l border-slate-100 h-full w-0"></div>
-            <div className="border-l border-slate-100 h-full w-0"></div>
-            <div className="border-l border-slate-100 h-full w-0"></div>
-            <div className="border-l border-slate-100 h-full w-0"></div>
-            <div className="border-l border-slate-100 h-full w-0"></div>
-          </div>
-          
-          {/* SVG Line curve */}
-          <div className="absolute inset-0 h-full w-full">
-            <svg viewBox="0 0 800 200" className="w-full h-full preserve-3d" preserveAspectRatio="none">
-              {/* Area fill */}
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path 
-                d="M 0 150 C 100 150, 150 180, 250 160 C 350 140, 450 50, 550 150 C 650 250, 700 20, 800 100 L 800 200 L 0 200 Z" 
-                fill="url(#gradient)" 
-              />
-              {/* Line */}
-              <path 
-                d="M 0 150 C 100 150, 150 180, 250 160 C 350 140, 450 50, 550 150 C 650 250, 700 20, 800 100" 
-                fill="none" 
-                stroke="#10b981" 
-                strokeWidth="3" 
-                strokeLinecap="round"
-              />
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-
-          {/* X Axis Labels */}
-          <div className="absolute -bottom-6 left-0 right-0 flex justify-between text-sm font-medium text-slate-500">
-            <span>Sen</span>
-            <span>Sel</span>
-            <span>Rab</span>
-            <span>Kam</span>
-            <span>Jum</span>
-            <span>Sab</span>
-            <span>Min</span>
-          </div>
+          <p className="text-slate-700 font-bold text-base">Belum ada data pertumbuhan</p>
+          <p className="text-slate-400 text-sm mt-1 max-w-xs">Grafik pertumbuhan akan muncul setelah Anda melakukan setor dana dan berinvestasi di proyek.</p>
+          <a href="/deposit" className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-sm">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+            Setor Dana Sekarang
+          </a>
         </div>
       </div>
 
-      {/* BOTTOM WIDGETS */}
+      {/* ALOKASI ASET + DISTRIBUSI SEKTOR */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        
-        {/* Traffic Sources */}
+
+        {/* Alokasi Aset */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <h3 className="text-lg font-bold text-slate-800 mb-6">Alokasi Aset</h3>
-          
-          <div className="space-y-5">
-            <div>
-              <div className="flex justify-between text-sm font-bold mb-2 text-slate-800">
-                <span>Real Estat</span>
-                <span className="text-slate-600">42%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-3">
-                <div className="bg-emerald-700 h-3 rounded-full" style={{ width: '42%' }}></div>
-              </div>
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
             </div>
-            
-            <div>
-              <div className="flex justify-between text-sm font-bold mb-2 text-slate-800">
-                <span>Startup Teknologi</span>
-                <span className="text-slate-600">28%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-3">
-                <div className="bg-amber-400 h-3 rounded-full" style={{ width: '28%' }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-sm font-bold mb-2 text-slate-800">
-                <span>Obligasi & Saham</span>
-                <span className="text-slate-600">18%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-3">
-                <div className="bg-cyan-700 h-3 rounded-full" style={{ width: '18%' }}></div>
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-sm font-bold mb-2 text-slate-800">
-                <span>Energi Hijau</span>
-                <span className="text-slate-600">12%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-3">
-                <div className="bg-red-700 h-3 rounded-full" style={{ width: '12%' }}></div>
-              </div>
-            </div>
+            <p className="text-slate-700 font-bold text-sm">Belum ada alokasi</p>
+            <p className="text-slate-400 text-xs mt-1 max-w-[220px]">Alokasi aset per kategori akan muncul setelah Anda berinvestasi di proyek.</p>
           </div>
         </div>
 
-        {/* Sector Distribution */}
+        {/* Distribusi Sektor */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
           <h3 className="text-lg font-bold text-slate-800 mb-6">Distribusi Sektor</h3>
-          
-          <div className="flex-1 flex flex-col items-center justify-center">
-            {/* Donut Chart Mock */}
-            <div className="relative w-48 h-48 rounded-full flex items-center justify-center" style={{
-              background: 'conic-gradient(#059669 0% 50%, #0369a1 50% 75%, #92400e 75% 100%)'
-            }}>
-              <div className="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center border-4 border-white">
-                <span className="text-2xl font-bold text-slate-800">$75.5k</span>
-                <span className="text-sm font-medium text-slate-500 mt-1">Total Aset</span>
-              </div>
+          <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+              </svg>
             </div>
-            
-            <div className="flex gap-4 mt-8 text-xs font-semibold text-slate-600">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-600"></span> Real Estat (50%)
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-sky-700"></span> Teknologi (25%)
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-700"></span> Energi (25%)
-              </div>
-            </div>
+            <p className="text-slate-700 font-bold text-sm">Belum ada distribusi</p>
+            <p className="text-slate-400 text-xs mt-1 max-w-[220px]">Distribusi sektor akan muncul setelah Anda berinvestasi di beberapa proyek berbeda.</p>
           </div>
         </div>
       </div>
 
-      {/* TABLE */}
+      {/* TABLE — Proyek Aktif */}
       <div className="bg-white p-6 rounded-2xl shadow-sm mb-10 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -315,23 +230,27 @@ export default function Home() {
           </div>
           <Link href="/opportunities" className="text-emerald-600 text-xs font-bold hover:underline">Lihat Semua Proyek</Link>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left border-collapse">
+          <table className="w-full min-w-[600px] text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap">Nama Proyek</th>
                 <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap">Kategori</th>
                 <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap">Target Dana</th>
                 <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap">Status</th>
-                <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap text-right pr-6">ROI</th>
+                <th className="pb-3 text-sm font-medium text-slate-500 whitespace-nowrap text-right pr-2">ROI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
-                 <tr>
-                   <td colSpan={5} className="py-8 text-center text-slate-500 text-sm">Memuat proyek...</td>
-                 </tr>
+                [1,2].map(i => (
+                  <tr key={i}>
+                    <td colSpan={5} className="py-3">
+                      <SkeletonCard height="h-6" />
+                    </td>
+                  </tr>
+                ))
               ) : projects.length > 0 ? (
                 projects.map((project) => (
                   <tr key={project.id} className="hover:bg-slate-50/50 transition-colors">
@@ -339,37 +258,37 @@ export default function Home() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
                           {project.image_url ? (
-                            <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+                            <img src={project.image_url} alt={project.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400">
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </div>
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-sm text-slate-800">{project.title}</p>
-                          <p className="text-xs text-slate-500 truncate max-w-[200px]">{project.location}</p>
-                        </div>
+                        <p className="font-bold text-sm text-slate-800">{project.name}</p>
                       </div>
                     </td>
                     <td className="py-4 whitespace-nowrap pr-6">
                       <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{project.category}</span>
                     </td>
                     <td className="py-4 font-bold text-sm text-slate-700 whitespace-nowrap pr-6">
-                      Rp {project.target_amount.toLocaleString('id-ID')}
+                      Rp {project.target_amount?.toLocaleString('id-ID')}
                     </td>
                     <td className="py-4 whitespace-nowrap pr-6">
                       <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">{project.status}</span>
                     </td>
-                    <td className="py-4 text-sm font-bold text-emerald-600 whitespace-nowrap text-right pr-6">
-                      +{project.expected_roi}%
+                    <td className="py-4 text-sm font-bold text-emerald-600 whitespace-nowrap text-right pr-2">
+                      {project.roi}
                     </td>
                   </tr>
                 ))
               ) : (
-                 <tr>
-                   <td colSpan={5} className="py-8 text-center text-slate-500 text-sm">Belum ada proyek tersedia.</td>
-                 </tr>
+                <tr>
+                  <td colSpan={5} className="py-10 text-center">
+                    <p className="text-slate-500 text-sm font-medium">Belum ada proyek tersedia.</p>
+                    <a href="/opportunities" className="inline-block mt-2 text-emerald-600 text-xs font-bold hover:underline">Lihat Peluang Investasi →</a>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

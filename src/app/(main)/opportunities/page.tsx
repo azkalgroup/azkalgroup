@@ -12,14 +12,18 @@ export default function OpportunitiesPage() {
 
   useEffect(() => {
     async function loadProjects() {
-      const { data } = await supabase.from('projects').select('*').eq('status', 'Aktif').order('created_at', { ascending: false });
+      const { data } = await supabase
+        .from('projects')
+        .select('id,name,category,target_amount,collected_amount,progress,roi,deadline,image_url,status')
+        .eq('status', 'Aktif')
+        .order('created_at', { ascending: false });
       if (data) setOpportunities(data);
       setLoading(false);
     }
     loadProjects();
   }, []);
 
-  const categories = ['Semua', 'Kesehatan', 'F&B', 'Manufaktur', 'Teknologi', 'Properti'];
+  const categories = ['Semua', 'Teknologi', 'Otomotif', 'Kesehatan', 'F&B', 'Manufaktur', 'Properti'];
 
   const filteredOpportunities = activeCategory === 'Semua' 
     ? opportunities 
@@ -68,8 +72,21 @@ export default function OpportunitiesPage() {
 
       {/* GRID */}
       {loading ? (
-        <div className="w-full bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <p className="text-slate-500 font-medium">Memuat peluang investasi...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white rounded-2xl overflow-hidden border border-slate-100 animate-pulse">
+              <div className="h-56 bg-slate-200" />
+              <div className="p-6 space-y-3">
+                <div className="h-5 bg-slate-200 rounded w-2/3" />
+                <div className="h-4 bg-slate-100 rounded w-1/2" />
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="h-14 bg-slate-100 rounded-xl" />
+                  <div className="h-14 bg-slate-100 rounded-xl" />
+                </div>
+                <div className="h-10 bg-slate-200 rounded-xl mt-4" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredOpportunities.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

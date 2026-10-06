@@ -16,33 +16,34 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadAdminData() {
-      // 1. Total Investor
-      const { count: investorCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'investor');
-      setTotalInvestor(investorCount || 0);
+      // Jalankan SEMUA query secara paralel agar tidak menunggu satu per satu
+      const [
+        { count: investorCount },
+        { count: pendingCount },
+        { data: projectsData },
+        { data: trxData },
+      ] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'investor'),
+        supabase.from('transactions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('projects').select('id,name,target_amount,collected_amount,status,created_at').order('created_at', { ascending: false }),
+        supabase.from('transactions').select('id,type,amount,status,created_at,user_id,profiles(full_name)').order('created_at', { ascending: false }).limit(3),
+      ]);
 
-      // 2. Transaksi Menunggu
-      const { count: pendingCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+      setTotalInvestor(investorCount || 0);
       setPendingTrxCount(pendingCount || 0);
 
-      // 3. Proyek Aktif & Total Aset
-      const { data: projectsData } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
       if (projectsData) {
         setActiveProjects(projectsData.slice(0, 3));
-        const total = projectsData.reduce((acc, curr) => acc + (curr.target_amount || 0), 0);
+        const total = projectsData.reduce((acc, curr) => acc + (curr.collected_amount || 0), 0);
         setTotalAsset(total);
       }
 
-      // 4. Transaksi Terbaru
-      const { data: trxData } = await supabase
-        .from('transactions')
-        .select(`*, profiles(full_name)`)
-        .order('created_at', { ascending: false })
-        .limit(3);
       if (trxData) setRecentTransactions(trxData);
 
       setLoading(false);
     }
     loadAdminData();
+
   }, []);
 
   const getChartData = () => {
@@ -120,13 +121,19 @@ export default function AdminDashboard() {
           <div className="flex-1 relative w-full min-h-[250px] flex items-end gap-2 pt-10">
             {/* Grid Lines */}
             <div className="absolute inset-0 flex flex-col justify-between pb-8 pointer-events-none">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-full h-[1px] bg-slate-100 flex items-center">
-                  <span className="absolute -left-1 text-[10px] text-slate-400 -translate-x-full bg-white pr-2">
-                    {Math.abs(i - 4) * 1.5}M
-                  </span>
-                </div>
-              ))}
+              {[...Array(5)].map((_, i) => {
+                const val = Math.abs(i - 4) * 500000;
+                const label = val === 0 ? '0' : val >= 1000000
+                  ? `${(val / 1000000).toFixed(1).replace('.0','')}jt`
+                  : `${(val / 1000).toFixed(0)}rb`;
+                return (
+                  <div key={i} className="w-full h-[1px] bg-slate-100 flex items-center">
+                    <span className="absolute -left-1 text-[10px] text-slate-400 -translate-x-full bg-white pr-2">
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             
             {/* Mock Bars */}
@@ -136,7 +143,7 @@ export default function AdminDashboard() {
                 <span className="text-xs text-slate-500 mt-3">{bar.label}</span>
                 {/* Tooltip */}
                 <div className="absolute -top-10 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                  Rp {(bar.value / 10).toFixed(1)}M
+                  Rp {(bar.value * 5000).toLocaleString('id-ID')}
                 </div>
               </div>
             ))}
@@ -158,7 +165,7 @@ export default function AdminDashboard() {
                 <div key={project.id}>
                   <div className="flex justify-between items-end mb-2">
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{project.title}</p>
+                      <p className="text-sm font-bold text-slate-900">{project.name}</p>
                       <p className="text-xs text-slate-500 mt-0.5">Target: Rp {project.target_amount.toLocaleString('id-ID')}</p>
                     </div>
                     <span className="text-xs font-bold text-slate-700">Tersedia</span>
