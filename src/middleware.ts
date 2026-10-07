@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 
 // Tentukan path mana saja yang akan dilewati oleh middleware ini
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
