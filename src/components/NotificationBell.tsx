@@ -191,16 +191,32 @@ export default function NotificationBell() {
               notifications.map((notif) => (
                 <div 
                   key={notif.id} 
+                  onClick={() => {
+                    setIsOpen(false);
+                    const isAdmin = window.location.pathname.startsWith('/admin');
+                    const t = notif.title.toLowerCase();
+                    let link = isAdmin ? '/admin/notifications' : '/notifications';
+                    
+                    if (t.includes('setor') || t.includes('tarik') || t.includes('dana') || t.includes('tolak') || t.includes('setuju')) {
+                      link = isAdmin ? '/admin/transactions' : '/transactions';
+                    } else if (t.includes('proyek')) {
+                      link = isAdmin ? '/admin/opportunities' : '/opportunities';
+                    }
+                    
+                    window.location.href = link;
+                  }}
                   className={`p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer ${notif.unread ? 'bg-emerald-50/30' : ''}`}
                 >
                   <div className="flex gap-3">
                     <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${notif.unread ? 'bg-emerald-500' : 'bg-transparent'}`}></div>
-                    <div>
-                      <p className={`text-sm ${notif.unread ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
-                        {notif.title}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{notif.desc}</p>
-                      <p className="text-sm font-medium text-slate-400 mt-2">{notif.time}</p>
+                    <div className="flex-1 w-full min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className={`text-sm truncate ${notif.unread ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                          {notif.title}
+                        </p>
+                        <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap mt-0.5 text-right">{notif.time}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{notif.desc}</p>
                     </div>
                   </div>
                 </div>

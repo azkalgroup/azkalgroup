@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { getUserId } from '@/lib/auth';
@@ -20,11 +20,25 @@ const ewallets = [
   { id: 'QRIS', name: 'QRIS', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg', color: '#ED2C25' },
 ];
 
+const presetAmounts = [50000, 100000, 250000, 350000, 500000, 1000000];
+
 export default function DepositPage() {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('BCA');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNumpad, setShowNumpad] = useState(false);
+  
+  // TOAST STATE
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+
   const router = useRouter();
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +49,12 @@ export default function DepositPage() {
     if (!userId) return;
 
     const numAmount = Number(amount.replace(/\D/g, ''));
+    if (numAmount < 50000) {
+      showToast("Minimal penyetoran adalah Rp 50.000", "error");
+      setIsSubmitting(false);
+      return;
+    }
+
     const { error } = await supabase.from('transactions').insert([{
       user_id: userId,
       type: 'deposit',
@@ -43,20 +63,34 @@ export default function DepositPage() {
     }]);
 
     if (!error) {
+      // 1. Notifikasi untuk Investor
       await supabase.from('notifications').insert([{
         user_id: userId,
         title: '⏳ Permintaan Setor Dana',
         message: `Permintaan setor dana Anda sebesar Rp ${numAmount.toLocaleString('id-ID')} sedang diproses oleh admin.`,
       }]);
+
+      // 2. Notifikasi untuk Admin
+      const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+      if (admins && admins.length > 0) {
+        const adminNotifs = admins.map((admin) => ({
+          user_id: admin.id,
+          title: '🔔 Setor Dana Baru',
+          message: `Ada permintaan setor dana baru sebesar Rp ${numAmount.toLocaleString('id-ID')}. Segera proses di dashboard.`,
+        }));
+        await supabase.from('notifications').insert(adminNotifs);
+      }
     }
 
     setIsSubmitting(false);
 
     if (error) {
-      alert("Gagal membuat permintaan deposit: " + error.message);
+      showToast("Gagal membuat permintaan deposit: " + error.message, "error");
     } else {
-      alert("Permintaan deposit berhasil dibuat. Silakan tunggu konfirmasi Admin.");
-      router.push('/transactions');
+      showToast("Permintaan deposit berhasil dibuat. Menuju transaksi...", "success");
+      setTimeout(() => {
+        router.push('/transactions');
+      }, 1500);
     }
   };
 
@@ -65,8 +99,41 @@ export default function DepositPage() {
     setAmount(val);
   };
 
+  const handleNumpadInput = (val: string) => {
+    setAmount(prev => {
+      const current = prev + val;
+      if (current.length > 12) return prev;
+      return current;
+    });
+  };
+
   return (
-    <div className="p-4 md:p-8 w-full max-w-3xl mx-auto">
+    <div className="p-4 md:p-8 w-full max-w-3xl mx-auto pb-24 md:pb-8 relative">
+      
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-[slideDown_0.3s_ease-out]">
+          <style>{`
+            @keyframes slideDown {
+              from { transform: translate(-50%, -100%); opacity: 0; }
+              to { transform: translate(-50%, 0); opacity: 1; }
+            }
+          `}</style>
+          <div className={`px-5 py-3.5 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border flex items-center gap-3 backdrop-blur-md ${
+            toast.type === 'error' 
+              ? 'bg-red-50/95 border-red-200 text-red-800' 
+              : 'bg-emerald-50/95 border-emerald-200 text-emerald-800'
+          }`}>
+            {toast.type === 'error' ? (
+              <svg className="w-5 h-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            ) : (
+              <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+            )}
+            <p className="text-sm font-bold">{toast.message}</p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Setor Dana</h1>
         <p className="text-slate-500 font-medium mt-2">Tambah saldo investasi Anda dengan mudah dan aman.</p>
@@ -79,20 +146,45 @@ export default function DepositPage() {
             {/* Amount Input */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Jumlah Penyetoran (Rp)</label>
+              
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <span className="text-slate-400 font-medium">Rp</span>
                 </div>
+                
+                {/* Desktop Input */}
                 <input 
                   type="text" 
                   value={amount ? new Intl.NumberFormat('id-ID').format(Number(amount)) : ''}
                   onChange={handleAmountChange}
                   placeholder="0"
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-lg focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
-                  required
+                  className="hidden md:block w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-lg focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
                 />
+                
+                {/* Mobile Input Trigger */}
+                <div 
+                  onClick={() => setShowNumpad(true)}
+                  className="md:hidden w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-lg cursor-text"
+                >
+                  {amount ? new Intl.NumberFormat('id-ID').format(Number(amount)) : <span className="text-slate-400">0</span>}
+                </div>
               </div>
-              <p className="text-xs text-slate-500 font-medium mt-2">Minimal penyetoran Rp 1.000.000</p>
+
+              {/* Preset Buttons */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {presetAmounts.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setAmount(preset.toString())}
+                    className="px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:border-slate-800 hover:text-slate-900 hover:bg-slate-50 transition-colors active:scale-95"
+                  >
+                    Rp {new Intl.NumberFormat('id-ID').format(preset)}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-xs text-slate-500 font-medium mt-4">Minimal penyetoran Rp 50.000</p>
             </div>
 
             {/* Payment Method */}
@@ -172,8 +264,8 @@ export default function DepositPage() {
             <div className="pt-2">
               <button 
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={isSubmitting || !amount || Number(amount) < 50000}
+                className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -185,6 +277,61 @@ export default function DepositPage() {
           </form>
         </div>
       </div>
+
+      {/* MOBILE POPUP NUMPAD (DANA Style) */}
+      {showNumpad && (
+        <div 
+          className="fixed inset-0 z-[100] md:hidden bg-slate-900/60 backdrop-blur-sm flex flex-col justify-end"
+          onClick={() => setShowNumpad(false)}
+        >
+          <div 
+            className="bg-white w-full rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-4 pb-6"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            <style>{`
+              @keyframes slideUp {
+                from { transform: translateY(100%); opacity: 0.5; }
+                to { transform: translateY(0); opacity: 1; }
+              }
+            `}</style>
+            
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-bold text-slate-900 text-base">Nominal Setor Dana</h3>
+              <button onClick={() => setShowNumpad(false)} className="text-slate-700 font-bold bg-slate-100 px-3 py-1.5 rounded-full text-xs hover:bg-slate-200">Selesai</button>
+            </div>
+            
+            {/* Display Amount in Numpad */}
+            <div className="text-center mb-4 bg-slate-50 py-3 rounded-xl border border-slate-100 flex items-center justify-center gap-1">
+              <p className="text-sm font-medium text-slate-500">Rp</p>
+              <p className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                {amount ? new Intl.NumberFormat('id-ID').format(Number(amount)) : '0'}
+              </p>
+            </div>
+
+            {/* Grid Numpad */}
+            <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto">
+              {['1','2','3','4','5','6','7','8','9','000','0'].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleNumpadInput(num)}
+                  className="py-3 text-xl font-bold text-slate-800 bg-white border border-slate-100 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition-all"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setAmount(prev => prev.slice(0, -1))}
+                className="py-3 text-lg font-bold text-slate-800 bg-slate-50 border border-slate-100 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl hover:bg-slate-100 active:bg-slate-200 active:scale-95 transition-all flex items-center justify-center"
+              >
+                <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

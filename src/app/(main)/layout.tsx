@@ -112,7 +112,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 md:ml-64 w-full flex flex-col h-screen overflow-y-auto bg-slate-50 pt-20 md:pt-0">
+      <main className="flex-1 w-full flex flex-col h-screen overflow-y-auto bg-slate-50 pt-20 md:pt-0 md:pl-64">
         {/* DESKTOP TOP NAV */}
         <header className="hidden md:flex bg-white w-full px-8 py-4 justify-between items-center border-b border-slate-200 sticky top-0 z-40">
           <GlobalSearch />

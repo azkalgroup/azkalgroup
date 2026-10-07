@@ -93,14 +93,27 @@ export default function NotificationsMobilePage() {
           </div>
         ) : notifications.length > 0 ? (
           notifications.map((notif) => (
-            <div key={notif.id} className={`p-4 rounded-xl border ${notif.read ? 'bg-white border-slate-200' : 'bg-emerald-50/50 border-emerald-100'} flex gap-4 items-start shadow-sm`}>
+            <div 
+              key={notif.id} 
+              onClick={() => {
+                const t = notif.title.toLowerCase();
+                let link = '/notifications';
+                if (t.includes('setor') || t.includes('tarik') || t.includes('dana') || t.includes('tolak') || t.includes('setuju')) {
+                  link = '/transactions';
+                } else if (t.includes('proyek')) {
+                  link = '/opportunities';
+                }
+                window.location.href = link;
+              }}
+              className={`p-4 rounded-xl border cursor-pointer ${notif.read ? 'bg-white border-slate-200 hover:bg-slate-50' : 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50'} flex gap-4 items-start shadow-sm transition-colors`}
+            >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notif.bg} ${notif.color}`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={notif.icon} /></svg>
               </div>
-              <div>
+              <div className="flex-1 w-full min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <h4 className={`text-sm font-bold ${notif.read ? 'text-slate-800' : 'text-slate-900'}`}>{notif.title}</h4>
-                  <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap mt-0.5">{notif.time}</span>
+                  <h4 className={`text-sm font-bold truncate ${notif.read ? 'text-slate-800' : 'text-slate-900'}`}>{notif.title}</h4>
+                  <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap mt-0.5 text-right">{notif.time}</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">{notif.desc}</p>
               </div>

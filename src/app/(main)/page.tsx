@@ -24,7 +24,7 @@ export default function Home() {
       // Jalankan profile + projects PARALEL sekaligus
       const [profileResult, projectsResult] = await Promise.all([
         supabase.from('profiles').select('id,full_name,balance,avatar_url').eq('id', userId).single(),
-        supabase.from('projects').select('id,name,title,category,target_amount,collected_amount,status,roi,image_url,created_at').order('created_at', { ascending: false }).limit(3),
+        supabase.from('projects').select('id,name,category,target_amount,collected_amount,status,roi,image_url,created_at').order('created_at', { ascending: false }).limit(3),
       ]);
 
       if (profileResult.data) setProfile(profileResult.data);

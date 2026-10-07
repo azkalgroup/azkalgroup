@@ -4,20 +4,24 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    question: "Bagaimana cara menyetor dana ke akun saya?",
-    answer: "Anda dapat menyetor dana dengan mengklik tombol 'Setor Dana' di menu navigasi kiri. Sistem akan mengarahkan Anda ke WhatsApp Admin kami untuk memberikan instruksi transfer rekening yang aman."
+    question: "1. Bagaimana langkah awal untuk mulai berinvestasi?",
+    answer: "Langkah pertama adalah mengisi saldo dengan menekan tombol 'Setor Dana' di menu kiri. Anda akan diarahkan ke WhatsApp Admin untuk mengonfirmasi nominal dan mengirim bukti transfer. Setelah divalidasi, saldo Anda akan otomatis masuk ke akun dan siap digunakan."
   },
   {
-    question: "Kapan saya bisa menarik dana investasi saya?",
-    answer: "Dana dapat ditarik sesuai dengan tenor atau durasi proyek yang Anda ikuti. Untuk proyek dengan tenor fleksibel, penarikan dapat dilakukan kapan saja dengan mengklik tombol 'Tarik Dana'."
+    question: "2. Bagaimana cara memilih dan mendanai proyek?",
+    answer: "Buka menu 'Peluang Investasi' untuk melihat daftar motor atau proyek yang sedang membuka pendanaan. Pilih proyek yang Anda minati, pelajari detailnya, dan masukkan nominal investasi yang ingin Anda berikan dari saldo aktif Anda."
   },
   {
-    question: "Bagaimana cara membaca laporan ROI (Return on Investment)?",
-    answer: "Laporan ROI menunjukkan persentase keuntungan yang diproyeksikan (p.a / per annum) dibandingkan dengan modal awal Anda. Anda dapat melihat laporan detail di halaman Portofolio dengan menekan 'Minta Laporan Terbaru'."
+    question: "3. Kapan dan bagaimana saya mendapatkan keuntungan?",
+    answer: "Sistem keuntungan kami berjalan secara real-time. Setiap kali motor dari proyek yang Anda danai disewa, Admin akan mencatat pendapatan sewa tersebut. Sistem akan otomatis membagikan profit bersih (setelah dipotong biaya operasional) langsung ke akun Anda, secara proporsional sesuai dengan persentase modal Anda. Anda juga akan menerima notifikasi setiap kali ada profit masuk."
   },
   {
-    question: "Apakah data dan dana saya aman di InvestTrack?",
-    answer: "Tentu. Keamanan adalah prioritas kami. Semua transaksi dan pengelolaan data dilakukan dengan protokol enkripsi tinggi dan kami bekerja sama dengan mitra perbankan resmi."
+    question: "4. Di mana saya bisa memantau aset dan detail keuntungan?",
+    answer: "Semua aset investasi aktif Anda bisa dipantau di menu 'Portofolio'. Di sana Anda dapat melihat total modal, total keuntungan, dan ROI. Anda juga bisa menekan tombol 'Riwayat Keuntungan' pada masing-masing aset untuk melihat rincian setiap transaksi sewa yang memberikan Anda profit."
+  },
+  {
+    question: "5. Bagaimana cara menarik dana (Withdraw) uang saya?",
+    answer: "Anda dapat menarik saldo yang tersedia kapan saja dengan menekan tombol 'Tarik Dana' di menu navigasi. Masukkan nominal yang ingin ditarik, dan setelah disetujui oleh Admin, dana akan ditransfer kembali ke rekening bank yang Anda daftarkan."
   }
 ];
 
