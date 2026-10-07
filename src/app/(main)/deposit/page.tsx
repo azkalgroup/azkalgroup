@@ -80,6 +80,26 @@ export default function DepositPage() {
         }));
         await supabase.from('notifications').insert(adminNotifs);
       }
+
+      // 3. Sync ke Google Sheets
+      try {
+        const { data: profile } = await supabase.from('profiles').select('phone, email').eq('id', userId).single();
+        const contact = profile?.phone || profile?.email || userId;
+        
+        await fetch('/api/sync-sheets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            time: new Date().toLocaleString('id-ID'),
+            contact: contact,
+            type: 'Deposit',
+            amount: numAmount,
+            status: 'Pending'
+          })
+        });
+      } catch (err) {
+        console.error("Gagal sync ke Google Sheets", err);
+      }
     }
 
     setIsSubmitting(false);

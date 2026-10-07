@@ -10,6 +10,7 @@ export default function AdminTransactionsPage() {
   const ITEMS_PER_PAGE = 5;
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -71,7 +72,77 @@ export default function AdminTransactionsPage() {
   const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="flex-1 w-full p-6 md:p-8 pt-8 min-h-screen animate-fade-in">
+    <div className="flex-1 w-full p-6 md:p-8 pt-8 min-h-screen animate-fade-in relative">
+      
+      {/* MODAL LIHAT DETAIL */}
+      {selectedTransaction && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedTransaction(null)}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative z-10 animate-[slideUp_0.2s_ease-out]">
+            <style>{`
+              @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+              }
+            `}</style>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-900">Detail Transaksi</h3>
+                <button onClick={() => setSelectedTransaction(null)} className="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">ID Transaksi</p>
+                  <p className="text-sm font-mono text-slate-900 font-bold bg-slate-50 p-2 rounded-lg border border-slate-100">{selectedTransaction.id}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipe</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold border capitalize ${
+                        selectedTransaction.type === 'withdraw' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                        selectedTransaction.type === 'deposit' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                        'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {selectedTransaction.type}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Status</p>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold capitalize ${
+                        selectedTransaction.status === 'success' ? 'text-emerald-700 bg-emerald-100' : 
+                        selectedTransaction.status === 'pending' ? 'text-amber-700 bg-amber-100 animate-pulse' : 
+                        'text-rose-700 bg-rose-100'
+                      }`}>
+                        {selectedTransaction.status}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">User</p>
+                  <p className="text-sm font-bold text-slate-900">{selectedTransaction.profiles?.full_name || 'Tanpa Nama'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Jumlah</p>
+                  <p className="text-lg font-black text-slate-900">Rp {selectedTransaction.amount?.toLocaleString('id-ID')}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal & Waktu</p>
+                  <p className="text-sm font-medium text-slate-700">{new Date(selectedTransaction.created_at).toLocaleString('id-ID')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50">
+               <button onClick={() => setSelectedTransaction(null)} className="w-full py-3 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all shadow-sm">
+                 Tutup
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Persetujuan Transaksi</h2>
@@ -193,7 +264,7 @@ export default function AdminTransactionsPage() {
                           </button>
                         </div>
                       ) : (
-                        <button className="text-slate-400 hover:text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 transition-all">
+                        <button onClick={() => setSelectedTransaction(trx)} className="text-slate-400 hover:text-slate-700 bg-slate-50 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 transition-all">
                           Lihat Detail
                         </button>
                       )}

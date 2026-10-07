@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getUserId } from '@/lib/auth';
 
-export default function NotificationBell() {
+export default function NotificationBell({ mobileMode = false }: { mobileMode?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -149,17 +149,23 @@ export default function NotificationBell() {
     }
   };
 
+  const handleBellClick = async () => {
+    if (unreadCount > 0) {
+      await markAllAsRead();
+    }
+    
+    if (mobileMode) {
+      const isAdmin = window.location.pathname.startsWith('/admin');
+      window.location.href = isAdmin ? '/admin/notifications' : '/notifications';
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
     <div className="relative flex items-center justify-center" ref={dropdownRef}>
       <button 
-        onClick={() => {
-          const newOpen = !isOpen;
-          setIsOpen(newOpen);
-          // Ketika dropdown dibuka, otomatis tandai semua notif sudah dibaca
-          if (newOpen && unreadCount > 0) {
-            markAllAsRead();
-          }
-        }}
+        onClick={handleBellClick}
         className="flex items-center justify-center text-slate-500 hover:text-slate-700 relative transition-colors focus:outline-none"
       >
         <svg className="w-[22px] h-[22px]" fill="currentColor" viewBox="0 0 24 24">
@@ -173,7 +179,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-3 w-80 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+        <div className="absolute left-0 md:left-auto md:right-0 top-full mt-3 w-[300px] sm:w-80 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <h3 className="font-bold text-slate-800 text-sm">Notifikasi</h3>
             {unreadCount > 0 && (

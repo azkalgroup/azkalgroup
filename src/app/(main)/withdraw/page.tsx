@@ -129,9 +129,29 @@ export default function WithdrawPage() {
         const adminNotifs = admins.map((admin) => ({
           user_id: admin.id,
           title: '🔔 Penarikan Dana Baru',
-          message: `Ada permintaan penarikan dana baru sebesar Rp ${numAmount.toLocaleString('id-ID')}. Segera proses di dashboard.`,
+          message: `Ada permintaan penarikan dana baru sebesar Rp ${numAmount.toLocaleString('id-ID')} ke rekening ${method} ${accountNumber}. Segera proses di dashboard.`,
         }));
         await supabase.from('notifications').insert(adminNotifs);
+      }
+
+      // 3. Sync ke Google Sheets
+      try {
+        const { data: profile } = await supabase.from('profiles').select('phone, email').eq('id', userId).single();
+        const contact = profile?.phone || profile?.email || userId;
+        
+        await fetch('/api/sync-sheets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            time: new Date().toLocaleString('id-ID'),
+            contact: contact,
+            type: 'Tarik Dana',
+            amount: numAmount,
+            status: 'Pending'
+          })
+        });
+      } catch (err) {
+        console.error("Gagal sync ke Google Sheets", err);
       }
     }
 
